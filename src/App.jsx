@@ -40,6 +40,37 @@ const messageLines = [
   { b: false, t: "May your story continue to be as beautiful as it has always been." },
 ];
 
+// Generate rose petals once
+const PETALS = Array.from({ length: 30 }, (_, i) => ({
+  id: i,
+  left: `${Math.random() * 100}%`,
+  delay: `${Math.random() * 8}s`,
+  duration: `${6 + Math.random() * 6}s`,
+  size: `${14 + Math.random() * 16}px`,
+  rotate: `${Math.random() * 360}deg`,
+  drift: `${-60 + Math.random() * 120}px`,
+  opacity: 0.7 + Math.random() * 0.3,
+}));
+
+function RosePetals() {
+  return (
+    <div style={{ position: "fixed", inset: 0, pointerEvents: "none", zIndex: 50, overflow: "hidden" }}>
+      {PETALS.map(p => (
+        <div key={p.id} style={{
+          position: "absolute",
+          top: "-40px",
+          left: p.left,
+          fontSize: p.size,
+          opacity: p.opacity,
+          animation: `petalFall ${p.duration} ${p.delay} ease-in infinite`,
+          "--drift": p.drift,
+          "--rotate": p.rotate,
+        }}>🌹</div>
+      ))}
+    </div>
+  );
+}
+
 export default function AnniversaryCard() {
   const [slide, setSlide] = useState(0);
   const [playing, setPlaying] = useState(false);
@@ -59,7 +90,6 @@ export default function AnniversaryCard() {
   const offsetRef = useRef(0);
   const audioBufferRef = useRef(null);
 
-  // Load audio from public folder
   useEffect(() => {
     const loadAudio = async () => {
       try {
@@ -154,10 +184,20 @@ export default function AnniversaryCard() {
         @keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
         @keyframes zoom { from{transform:scale(1)} to{transform:scale(1.07)} }
         @keyframes twinkle { from{opacity:0.1} to{opacity:0.9} }
+        @keyframes petalFall {
+          0%   { transform: translateY(0)      translateX(0)               rotate(0deg);   opacity: 1; }
+          25%  { transform: translateY(25vh)   translateX(calc(var(--drift) * 0.4))  rotate(90deg);  }
+          50%  { transform: translateY(50vh)   translateX(var(--drift))              rotate(180deg); }
+          75%  { transform: translateY(75vh)   translateX(calc(var(--drift) * 0.6))  rotate(270deg); }
+          100% { transform: translateY(110vh)  translateX(calc(var(--drift) * 0.2))  rotate(var(--rotate)); opacity: 0; }
+        }
         .fade-in { animation: fadeUp 0.8s ease both }
         * { box-sizing:border-box; margin:0; padding:0; }
         body { margin:0; }
       `}</style>
+
+      {/* Rose petals on message screen */}
+      {showMsg && <RosePetals />}
 
       {/* Stars */}
       {[...Array(18)].map((_,i) => (
@@ -206,14 +246,11 @@ export default function AnniversaryCard() {
             <div style={{ position:"absolute", inset:0, background:"linear-gradient(to top,rgba(0,0,0,0.3) 0%,transparent 40%)" }}/>
             <div style={{ position:"absolute", top:"16px", right:"18px", color:"rgba(255,215,0,0.7)", fontSize:"20px", animation:"float 3s ease-in-out infinite" }}>💛</div>
           </div>
-
-          {/* Dot indicators */}
           <div style={{ display:"flex", justifyContent:"center", gap:"8px", marginTop:"16px" }}>
             {photos.map((_,i) => (
               <div key={i} onClick={() => { setSlide(i); setFade(true); }} style={{ width:i===slide?"24px":"8px", height:"8px", borderRadius:"4px", background:i===slide?"#ffd700":"rgba(255,215,0,0.25)", cursor:"pointer", transition:"all 0.3s ease" }}/>
             ))}
           </div>
-
           <div style={{ display:"flex", justifyContent:"center", gap:"14px", marginTop:"16px" }}>
             <button onClick={() => { setSlide(Math.max(0,slide-1)); setFade(true); }} style={btn}>‹ Prev</button>
             <button onClick={togglePlay} style={{ ...btn, background:gold, color:"#0a0a1a", minWidth:"110px" }}>{playing?"⏸ Pause":"▶ Play"}</button>
@@ -225,9 +262,9 @@ export default function AnniversaryCard() {
         </div>
       )}
 
-      {/* Message */}
+      {/* Message with rose petals */}
       {showMsg && (
-        <div style={{ maxWidth:"680px", width:"100%", zIndex:10 }} className="fade-in">
+        <div style={{ maxWidth:"680px", width:"100%", zIndex:60 }} className="fade-in">
           <div style={{ background:"linear-gradient(160deg,rgba(28,18,48,0.97),rgba(12,8,28,0.99))", border:"1px solid rgba(255,215,0,0.28)", borderRadius:"24px", padding:"clamp(24px,5vw,48px)", boxShadow:"0 0 80px rgba(255,215,0,0.08),inset 0 0 40px rgba(255,215,0,0.02)", position:"relative" }}>
             {[["top","left"],["top","right"],["bottom","left"],["bottom","right"]].map(([v,h],i) => (
               <div key={i} style={{ position:"absolute", [v]:"16px", [h]:"16px", color:"rgba(255,215,0,0.28)", fontSize:"18px" }}>✦</div>
@@ -248,7 +285,7 @@ export default function AnniversaryCard() {
               <div style={{ color:"rgba(255,255,255,0.3)", fontSize:"11px", letterSpacing:"3px" }}>✦ WITH LOVE ✦</div>
             </div>
           </div>
-          <div style={{ display:"flex", justifyContent:"center", gap:"14px", marginTop:"22px" }}>
+          <div style={{ display:"flex", justifyContent:"center", gap:"14px", marginTop:"22px", position:"relative", zIndex:61 }}>
             <button onClick={() => setShowMsg(false)} style={btn}>← Back to Photos</button>
             <button onClick={startShow} style={{ ...btn, background:gold, color:"#0a0a1a" }}>▶ Play Again</button>
           </div>
